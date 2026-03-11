@@ -23,11 +23,38 @@ const STATUS_COLOR = {
 const LOAN_COLORS = ["#F59E0B", "#10B981", "#38BDF8", "#818CF8", "#F472B6"];
 
 // ─── DATA FETCHING ───────────────────────────────────────────────────────────
+const AIRTABLE_TOKEN   = import.meta.env.VITE_AIRTABLE_TOKEN;
+const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
+
+const TABLE_IDS = {
+  Solicitudes: "tblfv9QxoIwJfihQ8",
+  Prestamos:   "tblc3tptDhAUheyNr",
+  Empresas:    "tblfZT55hGROayCCk",
+};
+
 async function fetchTable(table) {
-  const res = await fetch(`/api/airtable?table=${table}`);
-  if (!res.ok) throw new Error(`Error cargando ${table}`);
-  const { records } = await res.json();
-  return records;
+  if (!AIRTABLE_TOKEN || !AIRTABLE_BASE_ID) {
+    throw new Error("Faltan variables VITE_AIRTABLE_TOKEN o VITE_AIRTABLE_BASE_ID en Cloudflare.");
+  }
+  const tableId = TABLE_IDS[table];
+  let allRecords = [];
+  let offset = null;
+  do {
+    const url = new URL(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${tableId}`);
+    url.searchParams.set("pageSize", "100");
+    if (offset) url.searchParams.set("offset", offset);
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` },
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `Error cargando ${table}`);
+    }
+    const data = await res.json();
+    allRecords = allRecords.concat(data.records || []);
+    offset = data.offset || null;
+  } while (offset);
+  return allRecords;
 }
 
 function parseSolicitudes(records) {
