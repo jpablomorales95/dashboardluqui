@@ -21,3 +21,4 @@ Después de agregar las variables, haz **Retry deployment**.
 - Build command: `npm run build`
 - Build output directory: `dist`
 # rebuild
+# v3
