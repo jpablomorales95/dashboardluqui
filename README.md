@@ -20,3 +20,4 @@ Después de agregar las variables, haz **Retry deployment**.
 - Framework preset: None
 - Build command: `npm run build`
 - Build output directory: `dist`
+# rebuild
