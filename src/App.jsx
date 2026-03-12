@@ -57,7 +57,7 @@ function parseSolicitudes(records) {
     plazo:     r.fields["Plazo (meses)"] || 0,
     desembolso:r.fields["Desembolso"] || 0,
     cuota:     r.fields["Cuota Mensual"] || 0,
-    estado:    r.fields["Estado"]?.name || "Sin estado",
+    estado:    r.fields["Estado"]?.name || r.fields["Estado"] || "Sin estado",
     fecha:     r.fields["Fecha Solicitud"] || "",
   }));
 }
@@ -93,7 +93,7 @@ function parsePrestamos(records, rawSolicitudes = []) {
     totalPagado: r.fields["Total Pagado"] || 0,
     saldo:       r.fields["Saldo Pendiente"] || 0,
     proximoPago: r.fields["Próximo Pago"] || "",
-    estado:      r.fields["Estado Préstamo"]?.name || "Activo",
+    estado:      r.fields["Estado Préstamo"]?.name || r.fields["Estado Préstamo"] || "Activo",
     };
   });
 }
