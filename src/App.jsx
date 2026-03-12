@@ -241,16 +241,66 @@ function TabGeneral({ solicitudes, prestamos }) {
 function TabPrestamos({ prestamos }) {
   const empresasList = ["Todas", ...new Set(prestamos.map((p) => p.empresa).filter(Boolean))];
   const [filtro, setFiltro] = useState("Todas");
+  const [dropOpen, setDropOpen] = useState(false);
   const filtered = filtro === "Todas" ? prestamos : prestamos.filter((p) => p.empresa === filtro);
 
   return (
     <div>
-      {/* Filtros scroll horizontal en mobile */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 20, overflowX: "auto", paddingBottom: 6, WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
-        {empresasList.map((e) => (
-          <FilterBtn key={e} label={e} active={filtro === e} onClick={() => setFiltro(e)} />
-        ))}
-        <span style={{ marginLeft: "auto", color: "#4B5563", fontSize: 11, fontFamily: "'IBM Plex Mono',monospace", alignSelf: "center", flexShrink: 0, paddingLeft: 8 }}>
+      {/* Barra de filtros */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+
+        {/* Botón Todas */}
+        <FilterBtn label="Todas" active={filtro === "Todas"} onClick={() => { setFiltro("Todas"); setDropOpen(false); }} />
+
+        {/* Dropdown empresas */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setDropOpen((o) => !o)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: filtro !== "Todas" ? "rgba(129,140,248,0.85)" : "rgba(255,255,255,0.04)",
+              color:  filtro !== "Todas" ? "white" : "#9CA3AF",
+              border: `1px solid ${filtro !== "Todas" ? "#818CF8" : "rgba(255,255,255,0.08)"}`,
+              borderRadius: 10, padding: "7px 14px", cursor: "pointer",
+              fontSize: 12, fontFamily: "'Outfit',sans-serif", fontWeight: 500,
+              whiteSpace: "nowrap",
+            }}
+          >
+            🏢 {filtro !== "Todas" ? filtro : "Empresa"}
+            <span style={{ fontSize: 10, opacity: 0.7 }}>{dropOpen ? "▲" : "▼"}</span>
+          </button>
+
+          {/* Lista desplegable */}
+          {dropOpen && (
+            <div style={{
+              position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 100,
+              background: "#0d1020", border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: 12, overflow: "hidden", minWidth: 200,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+            }}>
+              {empresasList.filter(e => e !== "Todas").map((e) => (
+                <button
+                  key={e}
+                  onClick={() => { setFiltro(e); setDropOpen(false); }}
+                  style={{
+                    display: "block", width: "100%", textAlign: "left",
+                    background: filtro === e ? "rgba(129,140,248,0.15)" : "transparent",
+                    color: filtro === e ? "#818CF8" : "#E5E7EB",
+                    border: "none", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    padding: "11px 16px", cursor: "pointer",
+                    fontSize: 13, fontFamily: "'Outfit',sans-serif", fontWeight: filtro === e ? 600 : 400,
+                  }}
+                >
+                  {filtro === e && <span style={{ marginRight: 8 }}>✓</span>}
+                  {e}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Contador */}
+        <span style={{ color: "#4B5563", fontSize: 11, fontFamily: "'IBM Plex Mono',monospace", marginLeft: "auto" }}>
           {filtered.length} préstamo{filtered.length !== 1 ? "s" : ""}
         </span>
       </div>
