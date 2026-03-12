@@ -62,11 +62,28 @@ function parseSolicitudes(records) {
   }));
 }
 
-function parsePrestamos(records) {
-  return records.filter((r) => r.fields["Monto Desembolsado"]).map((r) => ({
+function parsePrestamos(records, rawSolicitudes = []) {
+  return records.filter((r) => r.fields["Monto Desembolsado"]).map((r) => {
+    // Empresa puede venir como objeto {name} o como string ID — manejo ambos
+    const empRaw = r.fields["Empresa"];
+    let empresa = "";
+    if (Array.isArray(empRaw) && empRaw.length > 0) {
+      empresa = empRaw[0]?.name || "";
+    }
+    // Fallback: buscar empresa desde la solicitud vinculada
+    if (!empresa && rawSolicitudes.length > 0) {
+      const solId = Array.isArray(r.fields["Solicitud"])
+        ? (r.fields["Solicitud"][0]?.id || r.fields["Solicitud"][0])
+        : null;
+      if (solId) {
+        const sol = rawSolicitudes.find((s) => s.id === solId);
+        if (sol) empresa = sol.fields["Empresa"] || "";
+      }
+    }
+    return {
     id: r.id,
     nombre:      r.fields["Préstamo"] || `Crédito #${r.fields["Número Crédito"]}`,
-    empresa:     r.fields["Empresa"]?.[0]?.name || "",
+    empresa,
     solicitante: r.fields["Solicitud"]?.[0]?.name || "",
     desembolsado:r.fields["Monto Desembolsado"] || 0,
     totalCuotas: r.fields["Total Cuotas"] || 0,
@@ -77,7 +94,8 @@ function parsePrestamos(records) {
     saldo:       r.fields["Saldo Pendiente"] || 0,
     proximoPago: r.fields["Próximo Pago"] || "",
     estado:      r.fields["Estado Préstamo"]?.name || "Activo",
-  }));
+    };
+  });
 }
 
 // ─── STYLES (inline responsive) ───────────────────────────────────────────────
@@ -469,7 +487,7 @@ export default function App() {
     try {
       const [sR, pR] = await Promise.all([fetchTable("Solicitudes"), fetchTable("Prestamos")]);
       setSolicitudes(parseSolicitudes(sR));
-      setPrestamos(parsePrestamos(pR));
+      setPrestamos(parsePrestamos(pR, sR));  // pasa sR para lookup de empresa
       setLastUpdate(new Date());
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
